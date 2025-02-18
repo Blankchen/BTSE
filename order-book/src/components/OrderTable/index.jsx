@@ -1,6 +1,31 @@
 import { formatNumber } from "../../shared/format";
+import "./index.scss";
 
 export const OrderTable = (props) => {
+  const newQuoteClassName = props.isBid ? "new-quote-bid" : "new-quote-ask";
+  const priceClassName = props.isBid ? "price buy" : "price sell";
+  const totalBarClassName = props.isBid ? "total-bar-bid" : "total-bar-ask";
+  const newQuotes = props.isBid ? props.newQuotes.bids : props.newQuotes.asks;
+  const changedSizes = props.isBid
+    ? props.changedSizes.bids
+    : props.changedSizes.asks;
+  const orderBook = props.orderBook;
+  const tableData = props.isBid
+    ? orderBook.bids
+    : orderBook.asks.slice().reverse();
+  // 獲取最大總量用於計算百分比條
+  const maxTotal = props.isBid
+    ? orderBook.bids.length > 0
+      ? orderBook.bids[orderBook.bids.length - 1].total
+      : 0
+    : orderBook.asks.length > 0
+    ? orderBook.asks[orderBook.asks.length - 1].total
+    : 0;
+
+  // 計算百分比條
+  const calculatePercentage = (total) => {
+    return (total / maxTotal) * 100;
+  };
 
   return (
     <div className="order-book-half">
@@ -13,42 +38,36 @@ export const OrderTable = (props) => {
           </tr>
         </thead>
         <tbody>
-          {orderBook.asks
-            .slice()
-            .reverse()
-            .map((ask) => {
-              const isNew = newQuotes.asks[ask.price];
-              const sizeChange = changedSizes.asks[ask.price];
-              const percentageWidth = calculatePercentage(
-                ask.total,
-                maxAskTotal
-              );
+          {tableData.map((row) => {
+            const isNew = newQuotes[row.price];
+            const sizeChange = changedSizes[row.price];
+            const percentageWidth = calculatePercentage(row.total);
 
-              return (
-                <tr
-                  key={ask.price}
-                  className={`ask-row ${isNew ? "new-quote-ask" : ""}`}
+            return (
+              <tr
+                key={row.price}
+                className={`${isNew ? newQuoteClassName : ""}`}
+              >
+                <td className={priceClassName}>{formatNumber(row.price)}</td>
+                <td
+                  className={`size ${
+                    sizeChange === "increase" ? "size-increase" : ""
+                  } ${sizeChange === "decrease" ? "size-decrease" : ""}`}
                 >
-                  <td className="price sell">{formatNumber(ask.price)}</td>
-                  <td
-                    className={`size ${
-                      sizeChange === "increase" ? "size-increase" : ""
-                    } ${sizeChange === "decrease" ? "size-decrease" : ""}`}
-                  >
-                    {formatNumber(ask.size)}
-                  </td>
-                  <td className="total">
-                    <div className="total-bar-container">
-                      <div
-                        className="total-bar-ask"
-                        style={{ width: `${percentageWidth}%` }}
-                      ></div>
-                      <span>{formatNumber(ask.total)}</span>
-                    </div>
-                  </td>
-                </tr>
-              );
-            })}
+                  {formatNumber(row.size)}
+                </td>
+                <td className="total">
+                  <div className="total-bar-container">
+                    <div
+                      className={totalBarClassName}
+                      style={{ width: `${percentageWidth}%` }}
+                    ></div>
+                    <span>{formatNumber(row.total)}</span>
+                  </div>
+                </td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </div>

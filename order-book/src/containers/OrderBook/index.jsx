@@ -4,6 +4,7 @@ import {
   connectOrderBookSocket,
   connectLastPriceSocket,
 } from "../../api/socket";
+import { OrderTable } from "../../components/OrderTable";
 
 // 格式化數字，添加千位分隔符
 const formatNumber = (num, decimals = 2) => {
@@ -12,6 +13,7 @@ const formatNumber = (num, decimals = 2) => {
     maximumFractionDigits: decimals,
   });
 };
+
 
 const OrderBook = () => {
   const [orderBook, setOrderBook] = useState({ bids: [], asks: [] });
@@ -34,10 +36,6 @@ const OrderBook = () => {
     });
   };
 
-  // 計算百分比條
-  const calculatePercentage = (total, maxTotal) => {
-    return (total / maxTotal) * 100;
-  };
 
   // 連接WebSocket並處理訂單簿數據
   useEffect(() => {
@@ -202,7 +200,9 @@ const OrderBook = () => {
 
   function LastPriceIcon() {
     let arrow = "";
-    if (lastPrice > prevLastPrice) {
+    if (!prevLastPrice || lastPrice === prevLastPrice) {
+      arrow = "";
+    } else if (lastPrice > prevLastPrice) {
       arrow = "M19.5 13.5 12 21m0 0-7.5-7.5M12 21V3";
     } else if (lastPrice < prevLastPrice) {
       arrow = "M4.5 10.5 12 3m0 0 7.5 7.5M12 3v18";
@@ -223,71 +223,13 @@ const OrderBook = () => {
     );
   }
 
-  // 獲取最大總量用於計算百分比條
-  const maxBidTotal =
-    orderBook.bids.length > 0
-      ? orderBook.bids[orderBook.bids.length - 1].total
-      : 0;
-  const maxAskTotal =
-    orderBook.asks.length > 0
-      ? orderBook.asks[orderBook.asks.length - 1].total
-      : 0;
-
   return (
     <div className="order-book-container">
       <h2 className="order-book-title">Order Book</h2>
       <div className="order-book-content">
         {/* 賣出訂單 (Asks) - 反向顯示，從最低價到最高價 */}
-        <div className="order-book-half">
-          <table className="order-book-table">
-            <thead>
-              <tr>
-                <th>Price (USD)</th>
-                <th>Size</th>
-                <th>Total</th>
-              </tr>
-            </thead>
-            <tbody>
-              {orderBook.asks
-                .slice()
-                .reverse()
-                .map((ask) => {
-                  const isNew = newQuotes.asks[ask.price];
-                  const sizeChange = changedSizes.asks[ask.price];
-                  const percentageWidth = calculatePercentage(
-                    ask.total,
-                    maxAskTotal
-                  );
+        <OrderTable isBid={false} newQuotes={newQuotes} changedSizes={changedSizes} orderBook={orderBook} />
 
-                  return (
-                    <tr
-                      key={ask.price}
-                      className={`ask-row ${isNew ? "new-quote-ask" : ""}`}
-                    >
-                      <td className="price sell">{formatNumber(ask.price)}</td>
-                      <td
-                        className={`size ${
-                          sizeChange === "increase" ? "size-increase" : ""
-                        } ${sizeChange === "decrease" ? "size-decrease" : ""}`}
-                      >
-                        {formatNumber(ask.size)}
-                      </td>
-                      <td className="total">
-                        <div className="total-bar-container">
-                          <div
-                            className="total-bar-ask"
-                            style={{ width: `${percentageWidth}%` }}
-                          ></div>
-                          <span>{formatNumber(ask.total)}</span>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-            </tbody>
-          </table>
-        </div>
-        
         <div className="last-price-container" style={getLastPriceStyle()}>
           <span>{lastPrice ? formatNumber(lastPrice) : "-"}</span>
           <span className="icon">
@@ -296,52 +238,7 @@ const OrderBook = () => {
         </div>
 
         {/* 買入訂單 (Bids) */}
-        <div className="order-book-half">
-          <table className="order-book-table">
-            <thead>
-              <tr>
-                <th>Price (USD)</th>
-                <th>Size</th>
-                <th>Total</th>
-              </tr>
-            </thead>
-            <tbody>
-              {orderBook.bids.map((bid) => {
-                const isNew = newQuotes.bids[bid.price];
-                const sizeChange = changedSizes.bids[bid.price];
-                const percentageWidth = calculatePercentage(
-                  bid.total,
-                  maxBidTotal
-                );
-
-                return (
-                  <tr
-                    key={bid.price}
-                    className={`bid-row ${isNew ? "new-quote-bid" : ""}`}
-                  >
-                    <td className="price buy">{formatNumber(bid.price)}</td>
-                    <td
-                      className={`size ${
-                        sizeChange === "increase" ? "size-increase" : ""
-                      } ${sizeChange === "decrease" ? "size-decrease" : ""}`}
-                    >
-                      {formatNumber(bid.size)}
-                    </td>
-                    <td className="total">
-                      <div className="total-bar-container">
-                        <div
-                          className="total-bar-bid"
-                          style={{ width: `${percentageWidth}%` }}
-                        ></div>
-                        <span>{formatNumber(bid.total)}</span>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+        <OrderTable isBid={true} newQuotes={newQuotes} changedSizes={changedSizes} orderBook={orderBook} />
       </div>
     </div>
   );
