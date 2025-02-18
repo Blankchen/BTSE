@@ -5,6 +5,7 @@ import {
   connectLastPriceSocket,
 } from "../../api/socket";
 import { OrderTable } from "../../components/OrderTable";
+import { LastPrice } from "../../components/LastPrice";
 
 // 格式化數字，添加千位分隔符
 const formatNumber = (num, decimals = 2) => {
@@ -13,7 +14,6 @@ const formatNumber = (num, decimals = 2) => {
     maximumFractionDigits: decimals,
   });
 };
-
 
 const OrderBook = () => {
   const [orderBook, setOrderBook] = useState({ bids: [], asks: [] });
@@ -35,7 +35,6 @@ const OrderBook = () => {
       };
     });
   };
-
 
   // 連接WebSocket並處理訂單簿數據
   useEffect(() => {
@@ -179,66 +178,28 @@ const OrderBook = () => {
   }, [newQuotes, changedSizes]);
 
   // 獲取最後價格的背景和文字顏色
-  const getLastPriceStyle = () => {
-    if (!prevLastPrice || lastPrice === prevLastPrice) {
-      return {
-        color: "#F0F4F8",
-        backgroundColor: "rgba(134, 152, 170, 0.12)",
-      };
-    } else if (lastPrice > prevLastPrice) {
-      return {
-        color: "#00b15d",
-        backgroundColor: "var(--buy-accumulative-color)",
-      };
-    } else {
-      return {
-        color: "#FF5B5A",
-        backgroundColor: "var(--sell-accumulative-color)",
-      };
-    }
-  };
-
-  function LastPriceIcon() {
-    let arrow = "";
-    if (!prevLastPrice || lastPrice === prevLastPrice) {
-      arrow = "";
-    } else if (lastPrice > prevLastPrice) {
-      arrow = "M19.5 13.5 12 21m0 0-7.5-7.5M12 21V3";
-    } else if (lastPrice < prevLastPrice) {
-      arrow = "M4.5 10.5 12 3m0 0 7.5 7.5M12 3v18";
-    }
-    return (
-      arrow && (
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          viewBox="0 0 24 24"
-          strokeWidth={1.5}
-          stroke="currentColor"
-          className="size-6"
-        >
-          <path strokeLinecap="round" strokeLinejoin="round" d={arrow} />
-        </svg>
-      )
-    );
-  }
 
   return (
     <div className="order-book-container">
       <h2 className="order-book-title">Order Book</h2>
       <div className="order-book-content">
         {/* 賣出訂單 (Asks) - 反向顯示，從最低價到最高價 */}
-        <OrderTable isBid={false} newQuotes={newQuotes} changedSizes={changedSizes} orderBook={orderBook} />
-
-        <div className="last-price-container" style={getLastPriceStyle()}>
-          <span>{lastPrice ? formatNumber(lastPrice) : "-"}</span>
-          <span className="icon">
-            <LastPriceIcon />
-          </span>
-        </div>
+        <OrderTable
+          isBid={false}
+          newQuotes={newQuotes}
+          changedSizes={changedSizes}
+          orderBook={orderBook}
+        />
+        
+        <LastPrice prevLastPrice={prevLastPrice} lastPrice={lastPrice} />
 
         {/* 買入訂單 (Bids) */}
-        <OrderTable isBid={true} newQuotes={newQuotes} changedSizes={changedSizes} orderBook={orderBook} />
+        <OrderTable
+          isBid={true}
+          newQuotes={newQuotes}
+          changedSizes={changedSizes}
+          orderBook={orderBook}
+        />
       </div>
     </div>
   );
