@@ -22,26 +22,26 @@ export const connectOrderBookSocket = (cb) => {
 
     if (data?.data?.type) {
       // Re-subscribe topic to get new snapshot if prevSeqNum of new data doesn’t match last data’s seqNum
-      // if (
-      //   seqNumRef &&
-      //   data.data.type === "delta" &&
-      //   data.data.prevSeqNum !== seqNumRef
-      // ) {
-      //   console.log("Sequence mismatch, resubscribing...");
-      //   ref.send(
-      //     JSON.stringify({
-      //       op: "unsubscribe",
-      //       args: [`update:${symbolGrouping}`],
-      //     })
-      //   );
-      //   ref.send(
-      //     JSON.stringify({
-      //       op: "subscribe",
-      //       args: [`update:${symbolGrouping}`],
-      //     })
-      //   );
-      //   return;
-      // }
+      if (
+        seqNumRef &&
+        data.data.type === "delta" &&
+        data.data.prevSeqNum !== seqNumRef
+      ) {
+        console.log("Sequence mismatch, resubscribing...");
+        ref.send(
+          JSON.stringify({
+            op: "unsubscribe",
+            args: [`update:${symbolGrouping}`],
+          })
+        );
+        ref.send(
+          JSON.stringify({
+            op: "subscribe",
+            args: [`update:${symbolGrouping}`],
+          })
+        );
+        return;
+      }
 
       seqNumRef = data.data.seqNum;
 

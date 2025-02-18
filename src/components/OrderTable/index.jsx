@@ -49,11 +49,7 @@ export const OrderTable = (props) => {
                 className={`${isNew ? newQuoteClassName : ""}`}
               >
                 <td className={priceClassName}>{formatNumber(row.price)}</td>
-                <td
-                  className={`size ${
-                    sizeChange === "increase" ? "size-increase" : ""
-                  } ${sizeChange === "decrease" ? "size-decrease" : ""}`}
-                >
+                <td className={`size ${sizeChange}`}>
                   {formatNumber(row.size)}
                 </td>
                 <td className="total">

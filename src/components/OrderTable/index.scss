@@ -56,12 +56,14 @@
   animation: flash-red 1s ease-out;
 }
 
-.size-increase {
-  animation: flash-green 1s ease-out;
-}
-
-.size-decrease {
-  animation: flash-red 1s ease-out;
+.size {
+  &.increase {
+    animation: flash-green 1s ease-out;
+  }
+  
+  &.decrease {
+    animation: flash-red 1s ease-out;
+  }
 }
 
 
@@ -74,9 +76,6 @@
     color: var(--sell-text-color);
   }
 }
-
-
-
 
 .total-bar-container {
   position: relative;

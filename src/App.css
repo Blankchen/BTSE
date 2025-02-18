@@ -16,8 +16,3 @@
   text-align: center;
   background-color: var(--background-color);
 }
-
-body, html {
-  margin: 0;
-  padding: 0;
-}
