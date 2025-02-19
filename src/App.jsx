@@ -1,5 +1,5 @@
 import './App.css'
-import OrderBook from './containers/OrderBook/index.jsx'
+import { OrderBook } from './containers/OrderBook'
 
 function App() {
   return (

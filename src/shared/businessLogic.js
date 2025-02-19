@@ -10,16 +10,6 @@ export const calculateTotals = (quotes) => {
   });
 };
 
-// Sell quotes: sum up quote size from lowest price quote to the highest
-export const handleSnapshotAsks = (asks) => {
-  const sortedAsks = asks
-    .sort((a, b) => parseFloat(a[0]) - parseFloat(b[0])) // 價格升序排序
-    .slice(0, 8)
-    .map(([price, size]) => ({ price, size }));
-
-  return calculateTotals(sortedAsks);
-};
-
 // Buy quotes: sum up quote size from highest price quote to the lowest
 export const handleSnapshotBids = (bids) => {
   const sortedBids = bids
@@ -30,50 +20,59 @@ export const handleSnapshotBids = (bids) => {
   return calculateTotals(sortedBids);
 };
 
+// Sell quotes: sum up quote size from lowest price quote to the highest
+export const handleSnapshotAsks = (asks) => {
+  const sortedAsks = asks
+    .sort((a, b) => parseFloat(a[0]) - parseFloat(b[0])) // 價格升序排序
+    .slice(0, 8)
+    .map(([price, size]) => ({ price, size }));
+
+  return calculateTotals(sortedAsks);
+};
+
 const deepClone = (value) => JSON.parse(JSON.stringify(value));
 
-export const handleDeltaBids = (
-  prevBids = [],
-  apiBids,
+export const handleDeltaOrder = (
+  prevOrders = [],
+  apiOrders,
   newQuotesTemp = {},
-  changedSizesTemp = {}
+  changedSizesTemp = {},
+  sortFn = (a, b) => parseFloat(b.price) - parseFloat(a.price)
 ) => {
-  // 深拷貝之前的訂單簿
-  const newBids = deepClone(prevBids);
+  // 深拷貝之前的訂單
+  const newOrders = deepClone(prevOrders);
 
-  // 處理買入訂單更新
-  apiBids.forEach(([price, size]) => {
+  // 處理訂單更新
+  apiOrders.forEach(([price, size]) => {
     const priceFloat = parseFloat(price);
-    const index = newBids.findIndex(
+    const index = newOrders.findIndex(
       (bid) => parseFloat(bid.price) === priceFloat
     );
 
     if (parseFloat(size) === 0) {
       // 移除數量為0的訂單
       if (index !== -1) {
-        newBids.splice(index, 1);
+        newOrders.splice(index, 1);
       }
     } else {
       if (index !== -1) {
         // 比較新舊大小，標記變化
-        const oldSize = parseFloat(newBids[index].size);
+        const oldSize = parseFloat(newOrders[index].size);
         const newSize = parseFloat(size);
         if (oldSize !== newSize) {
           changedSizesTemp[price] = newSize > oldSize ? "increase" : "decrease";
         }
-        newBids[index].size = size;
+        newOrders[index].size = size;
       } else {
         // 新的報價
-        newBids.push({ price, size });
+        newOrders.push({ price, size });
         newQuotesTemp[price] = true;
       }
     }
   });
 
   // 重新排序並限制數量
-  const sortedBids = newBids
-    .sort((a, b) => parseFloat(b.price) - parseFloat(a.price))
-    .slice(0, 8);
+  const sortedBids = newOrders.sort(sortFn).slice(0, 8);
 
   return calculateTotals(sortedBids);
 };

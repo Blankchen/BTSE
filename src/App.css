@@ -15,4 +15,5 @@
   margin: 0 auto;
   text-align: center;
   background-color: var(--background-color);
+  min-height: 100lvh;
 }
